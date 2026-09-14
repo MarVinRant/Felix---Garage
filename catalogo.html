@@ -59,5 +59,47 @@
     renderFenixCatalog();
     document.querySelectorAll('button.btn,a.btn').forEach((el)=>{el.childNodes.forEach((node)=>{if(node.nodeType===Node.TEXT_NODE)node.textContent=node.textContent.replace(/[↗→←↑↓]/g,'')})});
   </script>
+  <style>
+    .catalog-pagination{display:flex;justify-content:center;align-items:center;gap:8px;margin:28px 0 0}
+    .catalog-pagination button{min-width:40px;height:40px;border:1px solid var(--border);background:transparent;color:var(--muted);font:12px var(--mono);cursor:pointer}
+    .catalog-pagination button.is-active,.catalog-pagination button:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+    .consult-modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:20px;background:rgba(8,9,10,.78);backdrop-filter:blur(8px)}
+    .consult-modal[hidden]{display:none}.consult-box{position:relative;width:min(100%,620px);padding:28px;background:#17191b;color:#f5f5f3;border:1px solid #454b50;box-shadow:0 24px 70px rgba(0,0,0,.42)}
+    .consult-box h2{margin:8px 0 10px;font:600 42px/.9 var(--display);text-transform:uppercase}.consult-box>p{margin:0 0 22px;color:#c7cccf;font-size:14px}.consult-close{position:absolute;top:12px;right:14px;border:0;background:none;color:#fff;font-size:28px;line-height:1;cursor:pointer}.consult-form{display:grid;gap:14px}.consult-form label{display:grid;gap:6px;color:#c7cccf;font:11px var(--mono);letter-spacing:.08em;text-transform:uppercase}.consult-form input,.consult-form textarea{width:100%;padding:12px;border:1px solid #4b5156;background:#24282b;color:#fff;font:14px var(--body);border-radius:0}.consult-form textarea{min-height:100px;resize:vertical}.consult-form .btn{width:100%}
+    @media(max-width:700px){.product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.product-media{height:190px}.product-body{padding:14px}.product h2{font-size:24px}.product-meta{font-size:11px}.specs{margin:14px 0 16px;padding-top:12px}.spec{font-size:9px;padding:5px 6px}.product .btn{padding:0 8px;font-size:10px}.catalog-note{padding:22px 18px}.catalog-note strong{font-size:28px}.consult-box{padding:24px 18px}.consult-box h2{font-size:34px}}
+  </style>
+  <script>
+    let fenixCatalogPage=1;
+    const fenixCatalogPageSize=6;
+    const fenixPagination=document.createElement('nav');
+    fenixPagination.className='catalog-pagination';
+    fenixPagination.setAttribute('aria-label','Paginação do catálogo');
+    catalogGrid.after(fenixPagination);
+    renderFenixCatalog=function(){
+      const term=fSearch.value.trim().toLocaleLowerCase('pt-BR'),brand=fBrand.value,category=fCategory.value;
+      const list=fenixCatalogProducts.filter(p=>(!term||`${p.name} ${p.brand}`.toLocaleLowerCase('pt-BR').includes(term))&&(brand==='all'||p.brand===brand)&&(category==='all'||p.category===category));
+      const pageCount=Math.max(1,Math.ceil(list.length/fenixCatalogPageSize));
+      fenixCatalogPage=Math.min(fenixCatalogPage,pageCount);
+      const pageItems=list.slice((fenixCatalogPage-1)*fenixCatalogPageSize,fenixCatalogPage*fenixCatalogPageSize);
+      fCount.textContent=`${list.length} ${list.length===1?'item':'itens'} no catálogo`;
+      catalogGrid.innerHTML=pageItems.length?pageItems.map(p=>`<article class="product"><div class="product-media"><span class="badge red">Consultar</span></div><div class="product-body"><div class="eyebrow">${p.category} · ${p.brand}</div><h2>${p.name}</h2><div class="product-meta"><span>${p.brand}</span><span>·</span><span>Consulte adaptação e acabamento</span></div><div class="product-price">${p.price}</div><div class="specs"><span class="spec">Produto do catálogo</span><span class="spec">Disponibilidade sob consulta</span></div><button class="btn primary fenix-add-cart" data-product="${p.name}" data-price="${p.price}">Adicionar ao carrinho</button></div></article>`).join(''):'<div class="empty">Nenhum item encontrado. Faça uma consulta personalizada.</div>';
+      catalogGrid.querySelectorAll('.fenix-add-cart').forEach(btn=>btn.addEventListener('click',()=>{if(!catalogCart.some(item=>item.name===btn.dataset.product))catalogCart.push({name:btn.dataset.product,price:btn.dataset.price});renderFenixCart();document.querySelector('#carrinho')?.scrollIntoView({behavior:'smooth',block:'center'})}));
+      fenixPagination.innerHTML=pageCount>1?Array.from({length:pageCount},(_,i)=>`<button type="button" class="${i+1===fenixCatalogPage?'is-active':''}" data-page="${i+1}" aria-label="Página ${i+1}">${i+1}</button>`).join(''):'';
+      fenixPagination.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{fenixCatalogPage=Number(btn.dataset.page);renderFenixCatalog();document.querySelector('.catalog-content')?.scrollIntoView({behavior:'smooth',block:'start'})}));
+    };
+    [fSearch,fBrand,fCategory].forEach(el=>el.addEventListener('input',()=>{fenixCatalogPage=1;renderFenixCatalog()}));
+    const consultTrigger=document.querySelector('.catalog-note .btn');
+    const consultModal=document.createElement('div');
+    consultModal.className='consult-modal';consultModal.hidden=true;
+    consultModal.innerHTML='<div class="consult-box" role="dialog" aria-modal="true" aria-labelledby="consult-title"><button class="consult-close" type="button" aria-label="Fechar">×</button><div class="eyebrow">Consulta personalizada</div><h2 id="consult-title">Vamos encontrar uma opção.</h2><p>Explique o que você procura e a equipe verifica alternativas para seu carro.</p><form class="consult-form"><label>Seu nome<input name="name" required placeholder="Como podemos chamar você?"></label><label>Seu carro<input name="car" required placeholder="Marca, modelo e ano"></label><label>O que você procura?<textarea name="request" required placeholder="Conte sobre o banco, acabamento ou adaptação desejada."></textarea></label><button class="btn primary" type="submit">Enviar consulta pelo WhatsApp</button></form></div>';
+    document.body.append(consultModal);
+    const closeConsult=()=>{consultModal.hidden=true};
+    consultTrigger?.addEventListener('click',(event)=>{event.preventDefault();consultModal.hidden=false;consultModal.querySelector('input')?.focus()});
+    consultModal.querySelector('.consult-close').addEventListener('click',closeConsult);
+    consultModal.addEventListener('click',(event)=>{if(event.target===consultModal)closeConsult()});
+    consultModal.querySelector('form').addEventListener('submit',(event)=>{event.preventDefault();const data=new FormData(event.currentTarget);const msg=`Olá, Fenix Garage! Quero fazer uma consulta personalizada.\n\nNome: ${data.get('name')}\nCarro: ${data.get('car')}\nO que procuro: ${data.get('request')}\n\nGostaria de conhecer as opções disponíveis.`;window.open('https://wa.me/message/FU66FPGEST2CO1?text='+encodeURIComponent(msg),'_blank');closeConsult()});
+    document.querySelectorAll('.catalog-tabs .tab').forEach(tab=>tab.remove());
+    renderFenixCatalog();
+  </script>
 </body>
 </html>
