@@ -57,6 +57,7 @@
     [fSearch,fBrand,fCategory].forEach(el=>el.addEventListener('input',renderFenixCatalog));
     document.querySelector('#send-cart').addEventListener('click',()=>{const payment=document.querySelector('#payment-method').value,delivery=document.querySelector('#delivery-method').value,items=catalogCart.length?catalogCart.map(p=>`• ${p.name} — ${p.price}`).join('\n'):'Ainda estou avaliando as opções do catálogo.';const msg=`Olá, Fenix Garage! Quero consultar estas opções do catálogo:\n${items}\n\nForma de pagamento: ${payment}\nComo desejo receber: ${delivery}\n\nGostaria de confirmar valores, disponibilidade e os próximos passos.`;window.open('https://wa.me/message/FU66FPGEST2CO1?text='+encodeURIComponent(msg),'_blank')});
     renderFenixCatalog();
+    document.querySelectorAll('button.btn,a.btn').forEach((el)=>{el.childNodes.forEach((node)=>{if(node.nodeType===Node.TEXT_NODE)node.textContent=node.textContent.replace(/[↗→←↑↓]/g,'')})});
   </script>
 </body>
 </html>

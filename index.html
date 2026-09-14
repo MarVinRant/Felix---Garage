@@ -111,6 +111,9 @@
 <style>
   .hero-media{background:url('assets/hero-fachada-composite.jpg') center/cover no-repeat!important;}
   .hero-media:before,.hero-media:after{display:none;}
+  .btn.primary:after{content:none!important;display:none!important;}
+  .btn.primary:hover:after{transform:none!important;}
+  @media (max-width:700px){.hero-media{background-position:72% center!important;}}
 </style>
 <script>
   // Os projetos começam no resultado final; o clique revela o antes.
@@ -322,3 +325,7 @@
   document.querySelectorAll('.services-grid .service').forEach((service,index)=>{const detail=serviceDetails[index];if(!detail)return;const toggle=document.createElement('button');toggle.type='button';toggle.className='service-toggle';toggle.textContent='Ver detalhes';toggle.setAttribute('aria-expanded','false');const panel=document.createElement('div');panel.className='service-details';panel.innerHTML='<p>'+detail.text+'</p><ul>'+detail.items.map(item=>'<li>'+item+'</li>').join('')+'</ul>';service.append(toggle,panel);toggle.addEventListener('click',()=>{const open=service.classList.toggle('is-open');toggle.setAttribute('aria-expanded',String(open));});});
 </script>
 <style>.service:hover .service-toggle,.service.is-open .service-toggle{color:#F5F5F3}.service:hover .service-toggle:after,.service.is-open .service-toggle:after{color:var(--accent-bright)}</style>
+<style>.catalog-preview-cta a:after{content:none!important}.btn.primary:after{content:none!important;display:none!important}.btn.primary:hover:after{transform:none!important}</style>
+<script>
+  document.querySelectorAll('button.btn,a.btn').forEach((el)=>{el.childNodes.forEach((node)=>{if(node.nodeType===Node.TEXT_NODE)node.textContent=node.textContent.replace(/[↗→←↑↓]/g,'')})});
+</script>
